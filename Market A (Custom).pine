@@ -5,7 +5,7 @@
 // Thanks to LazyBear foor WaveTrend Oscillator https://www.tradingview.com/script/2KE8wTuF-Indicator-WaveTrend-Oscillator-WT/
 // I just added the red diamond, blood diamond and yellowX pattern, i dont know if is exact but seems to be.
 // Still need a lot of visual adjustments to look like market cipher A but it's an attempt
-study(title="Market A", shorttitle="Market A", overlay=true)
+study(title="Market A (Custom)", shorttitle="Market A (Custom)", overlay=true)
 
 // FUNCTIONS {
 
