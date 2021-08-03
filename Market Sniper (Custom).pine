@@ -1,4 +1,4 @@
-study("Market Sniper", overlay=true, shorttitle="Market Sniper")
+study("Market Sniper (Custom)", overlay=true, shorttitle="Market Sniper (Custom)")
 //===================Candle body resistance Channel==================//
 len = 34
 src = input(close, title="Renko Channel")
