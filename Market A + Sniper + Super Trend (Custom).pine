@@ -1,0 +1,248 @@
+//@version=4
+
+// Thanks Dynausmaux for the code
+// Based on Cipher_A from falconCoin https://www.tradingview.com/script/cAw5GEAB-Market-Cipher-A-free-version-1-1/
+// Thanks to LazyBear foor WaveTrend Oscillator https://www.tradingview.com/script/2KE8wTuF-Indicator-WaveTrend-Oscillator-WT/
+// I just added the red diamond, blood diamond and yellowX pattern, i dont know if is exact but seems to be.
+// Still need a lot of visual adjustments to look like market cipher A but it's an attempt
+study(title="Market A + Sniper + Super Trend (Custom)", shorttitle="Market A + Sniper + Super Trend (Custom)", overlay=true)
+
+// FUNCTIONS {
+
+// WaveTrend
+f_wavetrend(_src, _chlen, _avg, _malen) =>
+    _esa = ema(_src, _chlen)
+    _de = ema(abs(_src - _esa), _chlen)
+    _ci = (_src - _esa) / (0.015 * _de)
+    _tci = ema(_ci, _avg)
+    _wt1 = _tci
+    _wt2 = sma(_wt1, _malen)
+    [_wt1, _wt2]
+
+// 8 EMA Ribbon
+f_emaRibbon(_src, _e1, _e2, _e3, _e4, _e5, _e6, _e7, _e8) =>
+    _ema1 = ema(_src, _e1)
+    _ema2 = ema(_src, _e2)
+    _ema3 = ema(_src, _e3)
+    _ema4 = ema(_src, _e4)
+    _ema5 = ema(_src, _e5)
+    _ema6 = ema(_src, _e6)
+    _ema7 = ema(_src, _e7)
+    _ema8 = ema(_src, _e8)
+    [_ema1, _ema2, _ema3, _ema4, _ema5, _ema6, _ema7, _ema8]
+    
+f_rsimfi(_period, _multiplier, _tf) => security(syminfo.tickerid, _tf, sma(((close - open) / (high - low)) * _multiplier, _period))
+ 
+// } FUNCTIONS  
+
+
+// PARAMETERS {
+
+// WaveTrend
+wtChannelLen = input(9, title = 'WT Channel Length')
+wtAverageLen = input(13, title = 'WT Average Length')
+wtMASource = input(hlc3, title = 'WT MA Source')
+wtMALen = input(3, title = 'WT MA Length')
+
+// WaveTrend Overbought & Oversold lines
+obLevel = input(53, title = 'WT Overbought Level 1')
+obLevel2 = input(60, title = 'WT Overbought Level 2')
+obLevel3 = input(100, title = 'WT Overbought Level 3')
+osLevel = input(-53, title = 'WT Oversold Level 1')
+osLevel2 = input(-60, title = 'WT Oversold Level 2')
+osLevel3 = input(-80, title = 'WT Oversold Level 3')
+
+// EMA Ribbon
+showRibbon = input(true, "Show Ribbon")
+ema1Len = input(5, title = "EMA 1 Length")
+ema2Len = input(11, title = "EMA 2 Length")
+ema3Len = input(15, title = "EMA 3 Length")
+ema4Len = input(18, title = "EMA 4 Length")
+ema5Len = input(21, title = "EMA 5 Length")
+ema6Len = input(24, title = "EMA 6 Length")
+ema7Len = input(28, title = "EMA 7 Length")
+ema8Len = input(34, title = "EMA 8 Length")
+
+// RSI
+rsiSRC = input(close, title = "RSI Source")
+rsiLen = input(14, title = "RSI Length")
+rsiOversold = input(30, title = 'RSI Oversold', minval = 50, maxval = 100)
+rsiOverbought = input(60, title = 'RSI Overbought', minval = 0, maxval = 50)
+
+// RSI+MFI
+rsiMFIShow = input(true, title = "Show RSI+MFI")
+rsiMFIperiod = input(60, title = 'RSI+MFI Period')
+rsiMFIMultiplier = input(150, title = 'RSI+MFI Area multiplier')
+
+// }
+
+
+// CALCULATE INDICATORS {
+
+// EMA Ribbon
+[ema1, ema2, ema3, ema4, ema5, ema6, ema7, ema8] = f_emaRibbon(close, ema1Len, ema2Len, ema3Len, ema4Len, ema5Len, ema6Len, ema7Len, ema8Len)
+
+// RSI 
+rsi = rsi(rsiSRC, rsiLen)
+
+// Calculates WaveTrend
+[wt1, wt2] = f_wavetrend(wtMASource, wtChannelLen, wtAverageLen, wtMALen)
+
+// WaveTrend Conditions
+wtOverSold = wt2 <= osLevel
+wtOverBought = wt2 >= obLevel
+wtCross = cross(wt1, wt2)
+wtCrossUp = wt2 - wt1 <= 0
+wtCrossDown = wt2 - wt1 >= 0
+
+// RSI + MFI
+rsiMFI = f_rsimfi(rsiMFIperiod, rsiMFIMultiplier, timeframe.period)
+
+// Signals
+longEma = crossover(ema2, ema8)
+redCross = crossunder(ema1, ema2)
+blueTriangle = crossover(ema2, ema3)
+redDiamond = wtCross and wtCrossDown
+yellowCross = redDiamond and wt2 < 45 and wt2 > osLevel3 and rsi < 30 and rsi > 15 and rsiMFI < -5
+bloodDiamond = redDiamond and redCross
+bullCandle = open > ema2 and open > ema8 and (close[1] > open[1]) and (close > open) and not redDiamond and not redCross
+shortEma = crossover(ema8, ema2)
+
+// } CALCULATE INDICATORS
+
+
+// DRAW {
+
+// EMA Ribbon
+ribbonDir = ema8 < ema2
+colorEma = ribbonDir ? color.green : color.red
+
+plot(ema5, color=showRibbon ? ribbonDir ? #9bcdff : color.gray : na, linewidth=2, transp=15, title="EMA 5")
+
+
+  
+// ALERTS {
+alertcondition(redDiamond != 0, "Red Diamond", "Red Diamond")
+alertcondition(bloodDiamond != 0, "Blood Diamond", "Blood Diamond")
+alertcondition(yellowCross != 0, "YellowX", "YellowX")
+alertcondition(redCross != 0, "RedX", "RedX")
+alertcondition(longEma != 0, "Longema", "Longema")
+alertcondition(blueTriangle != 0, "Bluetriangle", "Bluetriangle")
+// } ALERTS
+
+
+
+
+//===================Candle body resistance Channel==================//
+len = 34
+src = input(close, title="Renko Channel")
+out = sma(src, len)
+last8h = highest(close, 13)
+lastl8 = lowest(close, 13)
+bearish = cross(close,out) == 1 and falling(close, 1)
+bullish = cross(close,out) == 1 and rising(close, 1)
+channel2=input(true, title="Renko Channel On/Off")
+// ul2=plot(channel2?last8h:last8h==nz(last8h[1])?last8h:na, color=red, linewidth=4, style=linebr, title="Renko Channel top", offset=0)
+// ll2=plot(channel2?lastl8:lastl8==nz(lastl8[1])?lastl8:na, color=green, linewidth=4, style=linebr, title="Renko Channel bottom", offset=0)
+// fill(ul2, ll2, color=fuchsia, transp=100, title="Renko Channel")
+//=============================================================//
+
+
+//--------------------Trend colour ema------------------------------------------------// 
+src0 = close, len0 = input(5, minval=1, title="EMA 1")
+ema0 = ema(src0, len0)
+direction = rising(ema0, 2) ? +1 : falling(ema0, 2) ? -1 : 0
+plot_color = direction > 0  ? color.red: direction < 0 ? color.lime : na
+// plot(ema0, title="EMA", style=line, linewidth=2, color = plot_color)
+//--------------------Trend colour ema 2------------------------------------------------//
+src02 = close, len02 = input(8, minval=1, title="EMA 2")
+ema02 = ema(src02, len02)
+direction2 = rising(ema02, 2) ? +1 : falling(ema02, 2) ? -1 : 0
+plot_color2 = direction2 > 0  ? color.lime: direction2 < 0 ? color.red : na
+// plot(ema02, title="EMA Signal 2", style=line, linewidth=2, color = plot_color2)
+//
+//--Modified -------------------------------------------------//           Signal 1
+//Configured ema signal output
+fast = input(5, minval=1, title="Short Signal Generator")
+slow = input(8, minval=1)
+vh1 = ema(highest(avg(low, close), fast), 5)
+vl1 = ema(lowest(avg(high, close), slow), 8)
+//
+e_ema1 = ema(close, 1)
+e_ema2 = ema(e_ema1, 1)
+e_ema3 = ema(e_ema2, 1)
+tema = 1 * (e_ema1 - e_ema2) + e_ema3
+//
+e_e1 = ema(close, 8)
+e_e2 = ema(e_e1, 5)
+dema = 2 * e_e1 - e_e2
+signal = tema > dema ? max(vh1, vl1) : min(vh1, vl1)
+is_call = tema > dema and signal > low and (signal-signal[1] > signal[1]-signal[2])
+is_put = tema < dema and signal < high and (signal[1]-signal > signal[2]-signal[1])
+plotshape(is_call and direction > 0 ? 1 : na, title="BUY ARROW", color=color.lime, text="*BUY*", style=shape.arrowup, location=location.belowbar)
+plotshape(is_put and direction < 0 ? -1 : na, title="SELL ARROW", color=color.red, text="*SELL*", style=shape.arrowdown)
+//
+//Modified - Supertrend----------------------------------------------------- //       Signal 2
+Factor=input(1, minval=1,maxval = 1000, title="Trend Transition Signal")
+Pd=input(1, minval=1,maxval = 1000, title="Period")
+Up=hl2-(Factor*atr(Pd))
+Dn=hl2+(Factor*atr(Pd))
+TrendUp=Up
+TrendUp := close[1]>TrendUp[1]? max(Up,TrendUp[1]) : Up
+TrendDown=Dn
+TrendDown:=close[1]<TrendDown[1]? min(Dn,TrendDown[1]) : Dn
+Trend=TrendUp
+Trend := close > TrendDown[1] ? 1: close< TrendUp[1]? -1: nz(Trend[1],0)
+plotarrow(Trend == 1 and Trend[1] == -1 ? Trend : na, title="Up Entry Arrow", colorup=color.lime, maxheight=1000, minheight=50, transp=60)
+plotarrow(Trend == -1 and Trend[1] == 1 ? Trend : na, title="Down Entry Arrow", colordown=color.red, maxheight=1000, minheight=50, transp=60)
+
+
+
+buynow = showRibbon ? ribbonDir ? is_call and direction > 0 ? 1 : na : na : na
+sellnow = showRibbon ? ribbonDir ? is_put and direction < 0 ? -1 : na : na : na
+
+// plotshape(is_call and direction[1] > 0 ? 1 : na, title="BUY ARROW", color=color.lime, text="*BUY*", style=shape.arrowup, location=location.belowbar)
+// plotshape(is_put and direction[1] < 0 ? -1 : na, title="SELL ARROW", color=color.red, text="*SELL*", style=shape.arrowdown)
+
+// plotshape(buynow ? 1 : na, title="BUY ARROW", color=color.lime, text="*BUYNOW*", style=shape.arrowup, location=location.belowbar)
+// plotshape(sellnow < 0 ? -1 : na, title="SELL ARROW", color=color.red, text="*SELLNOW*", style=shape.arrowdown)
+
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Zettt
+// Inspired by this YouTube video: https://youtu.be/peCdKOcD8iM?t=143
+
+//@version=4
+
+st1len = input(title="SuperTrend 1 Length", type=input.integer, defval=10)
+st1mult = input(title="SuperTrend 1 Multiplier", type=input.integer, defval=1)
+st2len = input(title="SuperTrend 2 Length", type=input.integer, defval=11)
+st2mult = input(title="SuperTrend 2 Multiplier", type=input.integer, defval=2)
+st3len = input(title="SuperTrend 3 Length", type=input.integer, defval=12)
+st3mult = input(title="SuperTrend 3 Multiplier", type=input.integer, defval=3)
+
+[st1, dir1] = supertrend(st1mult, st1len)
+[st2, dir2] = supertrend(st2mult, st2len)
+[st3, dir3] = supertrend(st3mult, st3len)
+
+// plotting (optional and off by default)
+// plotting st1
+col1Resistance = dir1 == 1 and dir1 == dir1[1] ? color.new(color.maroon, 0) : color.new(color.maroon, 100)
+col1Support = dir1 == -1 and dir1 == dir1[1] ? color.new(color.green, 0) : color.new(color.green, 100)
+plot(st1, color = col1Resistance, linewidth=1)
+plot(st1, color = col1Support, linewidth=1)
+// plotting st2
+col2Resistance = dir2 == 1 and dir2 == dir2[1] ? color.new(color.maroon, 0) : color.new(color.maroon, 100)
+col2Support = dir2 == -1 and dir2 == dir2[1] ? color.new(color.green, 0) : color.new(color.green, 100)
+plot(st2, color = col2Resistance, linewidth=1)
+plot(st2, color = col2Support, linewidth=1)
+// plotting st3
+col3Resistance = dir3 == 1 and dir3 == dir3[1] ? color.new(color.maroon, 0) : color.new(color.maroon, 100)
+col3Support = dir3 == -1 and dir3 == dir3[1] ? color.new(color.green, 0) : color.new(color.green, 100)
+plot(st3, color = col3Resistance, linewidth=1)
+plot(st3, color = col3Support, linewidth=1)
+
+uptrend = dir1 == 1 and dir2 == 1 and dir3 == 1
+downtrend = dir1 == -1 and dir2 == -1 and dir3 == -1
+
+theBarColor = uptrend ? color.maroon : downtrend ? color.green : na
+barcolor(color=theBarColor)
