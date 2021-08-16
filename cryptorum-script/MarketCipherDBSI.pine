@@ -1,0 +1,162 @@
+//@version=4
+
+// LEGEND :
+//    - CANDLE LABEL  RED     : Percentage of bears that are in control of the market
+//    - CANDLE LABEL  BLUE    : Percentage of bulls that are in control of the market
+//    - CANDLE LABEL  SILVER  : Percentagae of bears/bulls that are not in control of the market
+//    - SIGNAL CROSS  ORANGE  : Area where bulls and bears are fighting hard (reversal may occur)
+//    - SIGNAL CIRCLE RED     : Sell signal (fast line crosses under the slow line)
+//    - SIGNAL CIRCLE BLUE    : Buy signal (fast line crosses over the slow line) 
+//    - CHART  LINE   WHITE   : Average price EMA-13 used for calculating bear/bull power
+//
+
+// Gunzo Bulls Power vs. Bears Power v1.0
+study("Bulls Power vs. Bears Power", overlay=true, max_labels_count=500)
+
+// global input variables
+bull_bear_power_standard_length  = 13
+bull_bear_power_smoothing_length = 1
+
+total_power_fast_length          = input(title="Fast MA Period",                    type=input.integer, defval=3,  minval=1)
+total_power_slow_length          = input(title="Slow MA Period",                    type=input.integer, defval=12, minval=1)
+
+display_candle_labels            = input(title="Display candle labels",             type=input.bool,    defval=true)
+display_bear_labels_above        = input(title="Display only bear labels above x",  type=input.integer, defval=0, minval=0)
+display_bull_labels_above        = input(title="Display only bull labels above x",  type=input.integer, defval=0, minval=0)
+display_opposite_values          = input(title="Display opposite values",           type=input.bool,    defval=false)
+
+display_box_last_label           = input(title="Display boxes for last candle",     type=input.bool,    defval=true)
+
+display_crossover_signals        = input(title="Display slow / fast crossover (o)", type=input.bool,    defval=true)
+display_bear_bull_fights         = input(title="Display bear / bull fighting (x)",  type=input.bool,    defval=true)
+
+display_average_prince           = input(title="Display average price",             type=input.bool,    defval=false)
+
+// ######################################################################################################
+// ELDER RAY INDEX INDICATOR
+// ######################################################################################################
+
+average_price   = ema(close, bull_bear_power_standard_length)
+
+bull_power_raw  = high - average_price
+bear_power_raw  = low  - average_price
+
+bull_power      = ema( bull_power_raw, bull_bear_power_smoothing_length)
+bear_power      = ema( bear_power_raw, bull_bear_power_smoothing_length)
+
+total_power_raw = bull_power + bear_power
+
+
+// ######################################################################################################
+// CANDLE METER INDICATOR
+// ######################################################################################################
+
+bulls_dominating     = high >= average_price and low >= average_price
+bears_dominating     = high <= average_price and low <= average_price
+bears_bulls_fighting = high >= average_price and low <= average_price
+
+bull_power_absolute  = ema( abs(bull_power_raw), bull_bear_power_smoothing_length)
+bear_power_absolute  = ema( abs(bear_power_raw), bull_bear_power_smoothing_length)
+bull_power_percent   = round(100 * bull_power_absolute / (bull_power_absolute + bear_power_absolute))
+bear_power_percent   = 100 - bull_power_percent
+  
+total_power_fast     = ema(total_power_raw, total_power_fast_length)
+total_power_slow     = ema(total_power_raw, total_power_slow_length)
+  
+crossover_fast_slow  = crossover(total_power_fast,  total_power_slow)
+crossunder_fast_slow = crossunder(total_power_fast, total_power_slow)
+
+bulls_winning        = bull_power_percent >= 50
+bears_winning        = bear_power_percent >= 50
+  
+bulls_take_over      = bulls_dominating and not bulls_dominating[1]
+bears_take_over      = bears_dominating and not bears_dominating[1]
+
+
+// ######################################################################################################
+// PLOT CANDLE LABELS
+// ######################################################################################################
+// init label variables
+var label l_bear_candle = na
+var label l_bull_candle = na
+
+// variables for colors
+bear_label_color = bears_winning ? color.red  : color.silver
+bull_label_color = bulls_winning ? color.blue : color.silver
+
+// delete when changing candle
+if not display_candle_labels
+    label.delete(l_bear_candle)
+    label.delete(l_bull_candle)
+
+if display_candle_labels and bear_power_percent > display_bear_labels_above and ((bear_power_percent <= 50 and display_opposite_values) or (bear_power_percent > 50))
+    l_bear_candle := label.new(bar_index, high, yloc=yloc.abovebar, style=label.style_none, text=tostring(bear_power_percent), textcolor=bear_label_color, size=size.normal)
+if display_candle_labels and bull_power_percent > display_bull_labels_above and ((bull_power_percent <= 50 and display_opposite_values) or (bull_power_percent > 50))
+    l_bull_candle := label.new(bar_index, low,  yloc=yloc.belowbar, style=label.style_none, text=tostring(bull_power_percent), textcolor=bull_label_color, size=size.normal)
+
+// display line of average price
+plot(average_price,           title="EMA-13 closing",  style=plot.style_line,    linewidth=2, color=color.new(color.white, display_average_prince ? 0 : 100))
+
+ 
+// ######################################################################################################
+// PLOT BOX ON TOP (OLD WAY)
+// ######################################################################################################
+// init label variables
+// var label l_bear_box = na
+// var label l_bull_box = na
+
+// // variables for rectangle position
+// delta_x = time - time[1]
+// delta_y = 0
+
+// if barstate.islast
+//     // delete when changing candle
+//     label.delete(l_bear_box)
+//     label.delete(l_bull_box)
+
+//     // print label variables
+//     if display_box_last_label
+//         l_bear_box := label.new(x=time + delta_x * display_box_after_candles, y=close + delta_y, text="Bears: "+tostring(bear_power_percent), color=color.red,  textcolor=color.white,  style=label.style_label_down, xloc = xloc.bar_time, size=size.normal)
+//         l_bull_box := label.new(x=time + delta_x * display_box_after_candles, y=close + delta_y, text="Bulls: "+tostring(bull_power_percent), color=color.blue, textcolor=color.white,  style=label.style_label_up,   xloc = xloc.bar_time, size=size.normal)
+    
+
+// ######################################################################################################
+// PLOT BOX ON TOP (NEW WAY)
+// ######################################################################################################
+// init label variables
+var table top_boxes = table.new(position.top_right, 3, 2, border_width=3)
+
+if barstate.islast and display_box_last_label
+    table.cell(top_boxes, 0, 0, text="Bulls: \n"+tostring(bull_power_percent), bgcolor=color.new(color.blue, 0), text_color=color.white, width=6, height=10)
+    table.cell(top_boxes, 1, 0, text="Bears: \n"+tostring(bear_power_percent), bgcolor=color.new(color.red,  0), text_color=color.white, width=6, height=10)
+
+    
+// ######################################################################################################
+// PLOT SIGNALS
+// ######################################################################################################
+plotshape(display_bear_bull_fights  and bears_bulls_fighting,   title="Market fight", style=shape.xcross, location=location.bottom, color=color.orange, size=size.tiny)
+plotshape(display_crossover_signals and crossover_fast_slow,    title="Buy signal",   style=shape.circle, location=location.bottom, color=color.blue,   size=size.tiny)
+plotshape(display_crossover_signals and crossunder_fast_slow,   title="Sell signal",  style=shape.circle, location=location.bottom, color=color.red,    size=size.tiny)
+
+// plot(bulls_take_over  ? 1 : 0, title="Bulls take over",  style=plot.style_circles, linewidth=2, color=color.new(color.blue, transp=100))
+// plot(bears_take_over  ? 1 : 0, title="Bears take over",  style=plot.style_circles, linewidth=2, color=color.new(color.red,  transp=100))
+
+// plot(bulls_dominating ? 1 : 0, title="Bulls dominating", style=plot.style_circles, linewidth=2, color=color.new(color.blue, transp=100))
+// plot(bears_dominating ? 1 : 0, title="Bears dominating", style=plot.style_circles, linewidth=2, color=color.new(color.red,  transp=100))
+
+
+// ######################################################################################################
+// PEAK / VALLEY DIVERGENCE
+// ######################################################################################################
+// TODO in next version ;)
+
+
+// ######################################################################################################
+// ALERT CONDITIONS
+// ######################################################################################################
+alertcondition(bulls_take_over,                           title='Bulls taking over',      message='Market has been taken over by bulls.')
+alertcondition(bears_take_over,                           title='Bears taking over',      message='Market has been taken over by bears.')
+alertcondition(crossover_fast_slow,                       title='Bulls getting stronger', message='Bulls are getting stronger in recent candles.')
+alertcondition(crossunder_fast_slow,                      title='Bears getting stronger', message='Bears are getting stronger in recent candles.')
+alertcondition(bulls_dominating and bears_bulls_fighting, title='Bulls getting weaker',   message='Bulls are getting weaker in recent candles.')
+alertcondition(bears_dominating and bears_bulls_fighting, title='Bears getting weaker',   message='Bears are getting weaker in recent candles.')
