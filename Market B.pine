@@ -39,7 +39,7 @@
 //      - HT Candle is red
 //      - WT > 0 and crossed down
 
-study(title = 'Market B', shorttitle = 'Market B')
+study(title = 'Mark B', shorttitle = 'Mark B')
 
 // PARAMETERS {
 
@@ -456,11 +456,11 @@ plot(tcLine ? tcVal : na, color = color.new(colorWhite, 50), linewidth = 1, titl
 
 // Draw Overbought & Oversold lines
 //plot(obLevel, title = 'Over Bought Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 85)
-plot(obLevel2, title = 'Over Bought Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 85)
-plot(obLevel3, title = 'Over Bought Level 3', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 95)
+plot(obLevel2, title = 'Over Bought Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 0)
+plot(obLevel3, title = 'Over Bought Level 3', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 0)
 
 //plot(osLevel, title = 'Over Sold Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 85)
-plot(osLevel2, title = 'Over Sold Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 85)
+plot(osLevel2, title = 'Over Sold Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 0)
 
 // Sommi flag
 plotchar(sommiFlagShow and sommiBearish ? 108 : na, title = 'Sommi bearish flag', char='⚑', color = colorPink, location = location.absolute, size = size.tiny, transp = 0)
