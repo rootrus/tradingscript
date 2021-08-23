@@ -212,8 +212,8 @@ TrendDown=Dn
 TrendDown:=close[1]<TrendDown[1]? min(Dn,TrendDown[1]) : Dn
 Trend=TrendUp
 Trend := close > TrendDown[1] ? 1: close< TrendUp[1]? -1: nz(Trend[1],0)
-plotarrow(Trend == 1 and Trend[1] == -1 ? Trend : na, title="Up Entry Arrow", colorup=color.lime, maxheight=1000, minheight=50, transp=60)
-plotarrow(Trend == -1 and Trend[1] == 1 ? Trend : na, title="Down Entry Arrow", colordown=color.red, maxheight=1000, minheight=50, transp=60)
+plotarrow(Trend == 1 and Trend[1] == -1 ? Trend : na, title="Up Entry Arrow", colorup=color.lime, maxheight=1000, minheight=50, transp=60, display = display.none)
+plotarrow(Trend == -1 and Trend[1] == 1 ? Trend : na, title="Down Entry Arrow", colordown=color.red, maxheight=1000, minheight=50, transp=60, display = display.none)
 
 
 
@@ -247,18 +247,18 @@ st3mult = input(title="SuperTrend 3 Multiplier", type=input.integer, defval=3)
 // plotting st1
 col1Resistance = dir1 == 1 and dir1 == dir1[1] ? color.new(color.maroon, 0) : color.new(color.maroon, 100)
 col1Support = dir1 == -1 and dir1 == dir1[1] ? color.new(color.green, 0) : color.new(color.green, 100)
-plot(st1, color = col1Resistance, linewidth=1)
-plot(st1, color = col1Support, linewidth=1)
+plot(st1, color = col1Resistance, linewidth=1, display = display.none)
+plot(st1, color = col1Support, linewidth=1, display = display.none)
 // plotting st2
 col2Resistance = dir2 == 1 and dir2 == dir2[1] ? color.new(color.maroon, 0) : color.new(color.maroon, 100)
 col2Support = dir2 == -1 and dir2 == dir2[1] ? color.new(color.green, 0) : color.new(color.green, 100)
-plot(st2, color = col2Resistance, linewidth=1)
-plot(st2, color = col2Support, linewidth=1)
+plot(st2, color = col2Resistance, linewidth=1, display = display.none)
+plot(st2, color = col2Support, linewidth=1, display = display.none)
 // plotting st3
 col3Resistance = dir3 == 1 and dir3 == dir3[1] ? color.new(color.maroon, 0) : color.new(color.maroon, 100)
 col3Support = dir3 == -1 and dir3 == dir3[1] ? color.new(color.green, 0) : color.new(color.green, 100)
-plot(st3, color = col3Resistance, linewidth=1)
-plot(st3, color = col3Support, linewidth=1)
+plot(st3, color = col3Resistance, linewidth=1, display = display.none)
+plot(st3, color = col3Support, linewidth=1, display = display.none)
 
 uptrend = dir1 == 1 and dir2 == 1 and dir3 == 1
 downtrend = dir1 == -1 and dir2 == -1 and dir3 == -1
