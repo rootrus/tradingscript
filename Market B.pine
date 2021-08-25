@@ -147,7 +147,7 @@ colorPurple = #e600e6
 colorGreen = #3fff00
 colorOrange = #e2a400
 colorYellow = #ffe500
-colorWhite = #ffffff
+colorWhite = #9fa3b0
 colorPink = #ff00f0
 colorBluelight = #31c0ff
 
@@ -215,7 +215,7 @@ f_wavetrend(src, chlen, avg, malen, tf) =>
 f_tc(src, length, fastLength, slowLength) =>
     ema1 = ema(src, fastLength)
     ema2 = ema(src, slowLength)
-    macdVal = ema1 - ema2	
+    macdVal = ema1 - ema2   
     alpha = lowest(macdVal, length)
     beta = highest(macdVal, length) - alpha
     gamma = (macdVal - alpha) / beta * 100
@@ -405,7 +405,7 @@ wtGoldBuy = ((wtShowDiv and wtBullDiv) or (rsiShowDiv and rsiBullDiv)) and
 
 // DRAW {
 bgcolor(darkMode ? color.new(#000000, 80) : na)
-zLine = plot(0, color = color.new(colorWhite, 50))
+zLine = plot(0, title = 'Zero', color = color.new(colorWhite, 50))
 
 //  MFI BAR
 rsiMfiBarTopLine = plot(rsiMFIShow ? -95 : na, title = 'MFI Bar TOP Line', transp = 100)
@@ -417,7 +417,7 @@ plot(wtShow ? wt1 : na, style = plot.style_area, title = 'WT Wave 1', color = ma
 plot(wtShow ? wt2 : na, style = plot.style_area, title = 'WT Wave 2', color = macdWTColorsShow ? macdWT2Color : darkMode ? colorWT2_ : colorWT2 , transp = 20)
 
 // VWAP
-plot(vwapShow ? wtVwap : na, title = 'VWAP', color = colorYellow, style = plot.style_area, linewidth = 2, transp = 45)
+plot(vwapShow ? wtVwap : na, title = 'VWAP', color = colorYellow, style = plot.style_line, linewidth = 2, transp = 45)
 
 // MFI AREA
 rsiMFIplot = plot(rsiMFIShow ? rsiMFI: na, title = 'RSI+MFI Area', color = rsiMFIColor, transp = 20)
@@ -455,11 +455,11 @@ plot(tcLine ? tcVal : na, color = color.new(colorWhite, 50), linewidth = 1, titl
 
 
 // Draw Overbought & Oversold lines
-//plot(obLevel, title = 'Over Bought Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 85)
+plot(obLevel, title = 'Over Bought Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 15)
 plot(obLevel2, title = 'Over Bought Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 0)
 plot(obLevel3, title = 'Over Bought Level 3', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 0)
 
-//plot(osLevel, title = 'Over Sold Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 85)
+plot(osLevel, title = 'Over Sold Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 15)
 plot(osLevel2, title = 'Over Sold Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 0)
 
 // Sommi flag
