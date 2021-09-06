@@ -147,9 +147,10 @@ colorPurple = #e600e6
 colorGreen = #3fff00
 colorOrange = #e2a400
 colorYellow = #ffe500
-colorWhite = #9fa3b0
+colorWhite = #ffffff
 colorPink = #ff00f0
 colorBluelight = #31c0ff
+colorPinkLight = #e1bee7
 
 colorWT1 = #90caf9
 colorWT2 = #0d47a1
@@ -400,6 +401,14 @@ wtGoldBuy = ((wtShowDiv and wtBullDiv) or (rsiShowDiv and rsiBullDiv)) and
            wtLow_prev - wt2 <= -5 and
            lastRsi < 30           
           
+Buy1 = buySignal
+Buy2 = buySignalDiv
+Buy3 = wtGoldBuy
+Buy4 = sommiBullish
+Buy5 = sommiBullishDiamond
+Buy6 = wtCross and wtCrossUp
+Buy = Buy1 or Buy2 or Buy3 or Buy4 or Buy5 or Buy6
+Sell = wtCross and wtCrossDown
 // } CALCULATE INDICATORS
 
 
@@ -408,8 +417,8 @@ bgcolor(darkMode ? color.new(#000000, 80) : na)
 zLine = plot(0, title = 'Zero', color = color.new(colorWhite, 50))
 
 //  MFI BAR
-rsiMfiBarTopLine = plot(rsiMFIShow ? -95 : na, title = 'MFI Bar TOP Line', transp = 100)
-rsiMfiBarBottomLine = plot(rsiMFIShow ? -99 : na, title = 'MFI Bar BOTTOM Line', transp = 100)
+rsiMfiBarTopLine = plot(rsiMFIShow ? -95 : na, title = 'MFI Bar TOP Line', transp = 0)
+rsiMfiBarBottomLine = plot(rsiMFIShow ? -99 : na, title = 'MFI Bar BOTTOM Line', transp = 0)
 fill(rsiMfiBarTopLine, rsiMfiBarBottomLine, title = 'MFI Bar Colors', color = rsiMFIColor, transp = 75)
 
 // WT Areas
@@ -455,11 +464,11 @@ plot(tcLine ? tcVal : na, color = color.new(colorWhite, 50), linewidth = 1, titl
 
 
 // Draw Overbought & Oversold lines
-plot(obLevel, title = 'Over Bought Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 15)
+//plot(obLevel, title = 'Over Bought Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 85)
 plot(obLevel2, title = 'Over Bought Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 0)
 plot(obLevel3, title = 'Over Bought Level 3', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 0)
 
-plot(osLevel, title = 'Over Sold Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 15)
+//plot(osLevel, title = 'Over Sold Level 1', color = colorWhite, linewidth = 1, style = plot.style_circles, transp = 85)
 plot(osLevel2, title = 'Over Sold Level 2', color = colorWhite, linewidth = 1, style = plot.style_stepline, transp = 0)
 
 // Sommi flag
@@ -468,8 +477,8 @@ plotchar(sommiFlagShow and sommiBullish ? -108 : na, title = 'Sommi bullish flag
 plot(sommiShowVwap ? ema(hvwap, 3) : na, title = 'Sommi higher VWAP', color = colorYellow, linewidth = 2, style = plot.style_line, transp = 15)
 
 // Sommi diamond
-plotchar(sommiDiamondShow and sommiBearishDiamond ? 108 : na, title = 'Sommi bearish diamond', char='◆', color = colorPink, location = location.absolute, size = size.tiny, transp = 0)
-plotchar(sommiDiamondShow and sommiBullishDiamond ? -108 : na, title = 'Sommi bullish diamond', char='◆', color = colorBluelight, location = location.absolute, size = size.tiny, transp = 0)
+// plotchar(sommiDiamondShow and sommiBearishDiamond ? 108 : na, title = 'Sommi bearish diamond', char='◆', color = colorPink, location = location.absolute, size = size.tiny, transp = 0)
+// plotchar(sommiDiamondShow and sommiBullishDiamond ? -108 : na, title = 'Sommi bullish diamond', char='◆', color = colorBluelight, location = location.absolute, size = size.tiny, transp = 0)
 
 // Circles
 plot(wtCross ? wt2 : na, title = 'Buy and sell circle', color = signalColor, style = plot.style_circles, linewidth = 3, transp = 15)
@@ -500,4 +509,14 @@ alertcondition(sellSignal, 'Sell (Big red circle)', 'Red Circle WaveTrend Overbo
 alertcondition(sellSignalDiv, 'Sell (Big red circle + Div)', 'Buy & WT Bearish Divergence & WT Overbought')
 alertcondition(wtCross and wtCrossDown, 'Sell (Small red dot)', 'Sell small circle')
 
+// GREEN RED DOT BUY SELL INDICATION
+alertcondition(Buy, 'Green Dot', 'Green Dot')
+alertcondition(Sell, 'Red Dot', 'Red Dot')
 // } ALERTS
+
+
+// Additional Indicator
+
+// plot(6, title = 'Vwap Top', color = color.new(colorPinkLight, 0))
+// plot(-6, title = 'Vwap Bottom', color = color.new(colorPinkLight, 0))
+// plot(20, title = 'Momentun Wave Top', color = colorWhite, style = plot.style_line, linewidth = 2, transp = 15)
